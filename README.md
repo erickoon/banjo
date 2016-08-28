@@ -1,5 +1,4 @@
-# banjo
-banjo challenge
+# mine-the-tweets
 
 tweet-webapp - displaying search results
 
