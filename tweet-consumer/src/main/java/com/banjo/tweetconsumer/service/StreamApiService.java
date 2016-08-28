@@ -52,9 +52,7 @@ public class StreamApiService {
     public void init() {
 
         StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
-
         endpoint.locations(Lists.newArrayList(new Location(SW, NE)));
-//        endpoint.trackTerms(Lists.newArrayList("twitterapi", "#yolo"));
 
         Authentication auth = new OAuth1(consumerKey, consumerSecret, token, secret);
 

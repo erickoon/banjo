@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -17,6 +18,9 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -28,6 +32,7 @@ public class TweetIndexService {
 
     private final static String INDEX_TWITER = "twitter";
     private final static String MAPPING_TWEET = "tweet";
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("EEE MMM d HH:mm:ss Z yyyy");
 
     @Value("${elastic.search.cluster}")
     private String clusterName;
@@ -37,6 +42,9 @@ public class TweetIndexService {
 
     @Value("${elastic.search.port}")
     private int port;
+
+    @Value("${elastic.search.delete.index}")
+    private boolean deleteIndex;
 
     private Client client;
 
@@ -56,103 +64,94 @@ public class TweetIndexService {
 
     public void indexTweet(String tweet) {
 
-        JsonNode jsonNode = toJsonNode(tweet);
+        IndexRequestBuilder indexRequestBuilder = objectBuilder(tweet);
 
-        if(jsonNode != null) {
+        if(indexRequestBuilder != null) {
 
-            if(jsonNode.hasNonNull("coordinates")) {
-                System.out.println("hascoordinates");
-            }
-            else if(jsonNode.hasNonNull("place")) {
-                System.out.println("hasplaces");
+            IndexResponse response = indexRequestBuilder.get();
 
-                //https://dev.twitter.com/overview/api/places
-            }
-            String id = jsonNode.get("id_str").asText();
-            String text = jsonNode.get("text").asText();
-            Long userId = jsonNode.get("user").get("id").asLong();
-            String screenName = jsonNode.get("user").get("screen_name").asText();
-
-            /**
-             * "coordinates":
-             {
-             "coordinates":
-             [
-             -75.14310264,
-             40.05701649
-             ],
-             "type":"Point"
-             }
-             */
-
-            IndexResponse response = null;
-            try {
-                response = client.prepareIndex(INDEX_TWITER, MAPPING_TWEET, id)
-                        .setSource(jsonBuilder()
-                                .startObject()
-                                .field("text", text)
-                                .field("user_id", userId)
-                                .field("screen_name", screenName)
-                                .endObject()
-                        )
-                        .get();
-
-                System.out.println(response.getId());
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
-
-
     }
 
     private void prepareIndex() {
 
-        if(client.admin().indices().exists(new IndicesExistsRequest(INDEX_TWITER)).actionGet().isExists()) {
-            client.admin().indices().delete(new DeleteIndexRequest(INDEX_TWITER)).actionGet(); // start fresh
-        }
+        if(deleteIndex && client.admin().indices().exists(new IndicesExistsRequest(INDEX_TWITER)).actionGet().isExists()) {
+            
+            client.admin().indices().delete(new DeleteIndexRequest(INDEX_TWITER)).actionGet();
 
-        client.admin().indices().prepareCreate(INDEX_TWITER)
-                .addMapping(MAPPING_TWEET, "{\n" +
-                        "    \"tweet\": {\n" +
-                        "      \"properties\": {\n" +
-                        "        \"user_id\": {\n" +
-                        "          \"type\": \"string\"\n" +
-                        "        },\n" +
-                        "        \"screen_name\": {\n" +
-                        "          \"type\": \"string\"\n" +
-                        "        },\n" +
-                        "        \"text\": {\n" +
-                        "          \"type\": \"string\"\n" +
-                        "        },\n" +
-                        "        \"location\": {\n" +
-                        "          \"type\": \"geo_point\",\n" +
-                        "          \"geohash\": true,\n" +
-                        "          \"geohash_prefix\": true\n" +
-                        "        }\n" +
-                        "      }\n" +
-                        "    }\n" +
-                        "  }")
-                .get();
+            client.admin().indices().prepareCreate(INDEX_TWITER)
+                    .addMapping(MAPPING_TWEET, "{\n" +
+                            "    \"tweet\": {\n" +
+                            "      \"properties\": {\n" +
+                            "        \"user_id\": {\n" +
+                            "          \"type\": \"string\"\n" +
+                            "        },\n" +
+                            "        \"screen_name\": {\n" +
+                            "          \"type\": \"string\"\n" +
+                            "        },\n" +
+                            "        \"text\": {\n" +
+                            "          \"type\": \"string\"\n" +
+                            "        },\n" +
+                            "        \"created_at\": {\n" +
+                            "          \"type\": \"date\"\n" +
+                            "        },\n" +
+                            "        \"location\": {\n" +
+                            "          \"type\": \"geo_point\",\n" +
+                            "          \"geohash\": true,\n" +
+                            "          \"geohash_prefix\": true\n" +
+                            "        }\n" +
+                            "      }\n" +
+                            "    }\n" +
+                            "  }")
+                    .get();
+        }
     }
 
-    private JsonNode toJsonNode(String tweet) {
+    private IndexRequestBuilder objectBuilder(String tweet) {
 
-        JsonNode jsonNode = null;
         try {
-            jsonNode = mapper.readTree(tweet);
+            JsonNode jsonNode = mapper.readTree(tweet);
+
+            if(jsonNode.has("id_str")) { //make sure its a tweet object. sometimes is a rate limit message
+
+                Double longitude = null;
+                Double latitude = null;
+
+                if(jsonNode.hasNonNull("coordinates")) { // only index tweets that have a coordinate
+                    longitude = jsonNode.get("coordinates").get("coordinates").get(0).asDouble();
+                    latitude = jsonNode.get("coordinates").get("coordinates").get(1).asDouble();
+                }
+
+                String id = jsonNode.get("id_str").asText();
+                String text = jsonNode.get("text").asText();
+                Long userId = jsonNode.get("user").get("id").asLong();
+                String screenName = jsonNode.get("user").get("screen_name").asText();
+                String createdAt = jsonNode.get("created_at").asText(); //Wed Aug 27 13:08:45 +0000 2008
+                Date date = DATE_FORMAT.parse(createdAt);
+
+                if(longitude != null && latitude != null) {
+
+                    return client.prepareIndex(INDEX_TWITER, MAPPING_TWEET, id)
+                            .setSource(jsonBuilder()
+                                    .startObject()
+                                    .field("text", text)
+                                    .field("user_id", userId)
+                                    .field("screen_name", screenName)
+                                    .field("created_at", date)
+                                    .startArray("location").value(longitude).value(latitude).endArray()
+                                    .endObject());
+                }
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        if(jsonNode.has("id_str")) {
-            return jsonNode;
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
 
         return null;
     }
+
 
     @PreDestroy
     public void destroy(){
