@@ -1,4 +1,4 @@
-package com.banjo.tweetwebapp;
+package com.minethetweets.tweetwebapp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

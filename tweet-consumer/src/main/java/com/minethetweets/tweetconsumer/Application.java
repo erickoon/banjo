@@ -1,6 +1,6 @@
-package com.banjo.tweetconsumer;
+package com.minethetweets.tweetconsumer;
 
-import com.banjo.tweetconsumer.service.StreamApiService;
+import com.minethetweets.tweetconsumer.service.StreamApiService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;

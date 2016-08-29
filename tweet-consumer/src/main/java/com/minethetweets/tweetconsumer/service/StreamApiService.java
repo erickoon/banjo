@@ -1,4 +1,4 @@
-package com.banjo.tweetconsumer.service;
+package com.minethetweets.tweetconsumer.service;
 
 import com.google.common.collect.Lists;
 import com.twitter.hbc.ClientBuilder;
