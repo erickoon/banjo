@@ -1,4 +1,6 @@
 
+var defaultZoom = 10;
+var defaultCenter = {lat: 37.773972, lng: -122.431297};
 var map;
 var openedWindow = undefined;
 var markers = [];
@@ -6,8 +8,8 @@ var markers = [];
 function initMap() {
 
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: {lat: 37.773972, lng: -122.431297}
+        zoom: defaultZoom,
+        center: defaultCenter
     });
 }
 
@@ -21,6 +23,8 @@ function clearMarkers() {
 
 function placeMarkers() {
 
+    document.getElementById("tweets-container").innerHTML = "Tweets loading ... ";
+
     clearMarkers();
 
     var reqData = {
@@ -30,6 +34,7 @@ function placeMarkers() {
         "keywords": $("#keywords").val(),
     }
 
+    map.setZoom(defaultZoom);
     map.setCenter({lat: reqData.lat, lng: reqData.lon});
 
     $.ajax({
@@ -37,7 +42,8 @@ function placeMarkers() {
         url: "api/v1/tweets/",
         data: reqData,
         success: function( data ) {
-
+            document.getElementById("tweets-container").innerHTML += data.length;
+            var timeout = 1000;
             for (var i in data) {
 
                 (function(tweet) {
@@ -62,43 +68,17 @@ function placeMarkers() {
 
                      });
                      markers.push(marker);
+
+                     setTimeout(function() {twttr.widgets.createTweet(tweet.id, document.getElementById('tweets-container'));}, timeout);
+
+                     timeout += 200;
+
                 })(data[i])
 
 
             }
         }
     });
-
-//    $.getJSON( "api/v1/tweets/?lat=37.773972&lon=-122.431297&rad=50", function( data ) {
-//
-//        for (var i in data) {
-//
-//            (function(tweet) {
-//                var marker = new google.maps.Marker({
-//                    position: {lat: tweet.location[1], lng: tweet.location[0]},
-//                    map: map,
-//                    animation: google.maps.Animation.DROP,
-//                });
-//
-//                var content = '@'+tweet.screen_name+'<br/>'+tweet.text;
-//                marker.addListener('click', function() {
-//                    if(openedWindow != undefined) {
-//                        openedWindow.close();
-//                    }
-//
-//                    var window = new google.maps.InfoWindow({
-//                            content: content
-//                        });
-//
-//                    window.open(map, marker);
-//                    openedWindow = window;
-//
-//                 });
-//            })(data[i])
-//
-//
-//        }
-//    });
 }
 
 $( document ).ready(function() {

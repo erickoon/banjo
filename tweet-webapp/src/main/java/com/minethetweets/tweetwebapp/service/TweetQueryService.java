@@ -16,6 +16,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -56,15 +57,22 @@ public class TweetQueryService {
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
     }
 
-    public List<JsonNode> searchByGeoAndRadius(double longitude, double latitude, double radiusInMiles, String sortField, SortOrder sortOrder)  {
+    public List<JsonNode> searchByGeoAndRadius(double longitude, double latitude, double radiusInMiles, String keywords, String sortField, SortOrder sortOrder)  {
 
         QueryBuilder qb = QueryBuilders.geoHashCellQuery("location",
                 new GeoPoint(latitude, longitude))
                 .precision(DistanceUnit.MILES.toString(radiusInMiles));
 
-        SearchResponse response = client.prepareSearch(INDEX_TWITER)
+        QueryBuilder kwQb = null;
+        if(!StringUtils.isEmpty(keywords)) {
+            kwQb = QueryBuilders.matchQuery("text", keywords);
+        }
+
+        SearchResponse response = client
+                .prepareSearch(INDEX_TWITER)
                 .setTypes(MAPPING_TWEET)
                 .setQuery(qb)
+                .setPostFilter(kwQb)
                 .setSize(250)
                 .addSort(sortField, sortOrder)
                 .execute()
@@ -85,4 +93,5 @@ public class TweetQueryService {
 
         return jsonNodeList;
     }
+
 }

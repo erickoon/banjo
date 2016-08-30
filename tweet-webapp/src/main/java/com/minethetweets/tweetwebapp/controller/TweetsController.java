@@ -5,6 +5,7 @@ import com.minethetweets.tweetwebapp.service.TweetQueryService;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,10 +31,14 @@ public class TweetsController {
     public List<JsonNode> list(HttpServletRequest request,
                                @RequestParam("lat") double lat,
                                @RequestParam("lon") double lon,
-                               @RequestParam("rad") double radius) {
+                               @RequestParam("rad") double radius,
+                               @RequestParam(value = "keywords", required = false) String keywords) {
 
+        if(!StringUtils.isEmpty(keywords)) {
+            String[] keywordsArr = keywords.split(keywords);
+        }
 
-        return tweetQueryService.searchByGeoAndRadius(lon, lat, radius, "created_at", SortOrder.DESC);
+        return tweetQueryService.searchByGeoAndRadius(lon, lat, radius, keywords, "created_at", SortOrder.DESC);
     }
 
 }

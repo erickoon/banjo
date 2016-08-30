@@ -1,0 +1,23 @@
+html, body {
+    font-family: Helvetica,Arial,Freesans,Clean,Sans-serif;
+    height: 100%;
+    margin: 10px;
+    padding: 0;
+}
+
+div {
+
+}
+
+#map {
+    width:1000px;
+    height: 100%;
+}
+.left {
+    float: left;
+    height: 100%;
+}
+
+#tweets-container {
+    margin-left: 10px;
+}
