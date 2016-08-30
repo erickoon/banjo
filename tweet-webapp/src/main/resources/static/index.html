@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Simple markers</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        width:1000px;
+        height: 100%;
+      }
+
+    </style>
+    <script src="//code.jquery.com/jquery-3.1.0.min.js"></script>
+</head>
+<body>
+<div>&nbsp;</div>
+<div>
+    Lat
+    <input type="text" id="lat" value="37.773972"/>
+    Long
+    <input type="text" id="lon" value="-122.431297"/>
+    Radius in Miles
+    <input type="text" id="rad" value="200"/>
+    Keywords (Seperate by comma)
+    <input type="text" id="keywords"/>
+    <button id="button">Submit</button>
+</div>
+<div>&nbsp;</div>
+<div id="map"></div>
+<script src="/index.js"></script>
+<script async defer
+        src="//maps.googleapis.com/maps/api/js?key=AIzaSyCsJ15889AGfwAMZK4W1k52etG0Nx5W9Fs&callback=initMap">
+</script>
+</body>
+</html>

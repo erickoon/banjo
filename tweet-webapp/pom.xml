@@ -41,11 +41,12 @@
 			<artifactId>elasticsearch</artifactId>
 		</dependency>
 
-		<!--<dependency>-->
-			<!--<groupId>com.minethetweets.tweetconsumer</groupId>-->
-			<!--<artifactId>tweet-consumer</artifactId>-->
-			<!--<version>0.0.1-SNAPSHOT</version>-->
-		<!--</dependency>-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 	</dependencies>
 
 	<build>
