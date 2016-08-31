@@ -75,9 +75,12 @@ public class TweetIndexService {
 
     private void prepareIndex() {
 
-        if(deleteIndex && client.admin().indices().exists(new IndicesExistsRequest(INDEX_TWITER)).actionGet().isExists()) {
+        if(deleteIndex && client.admin().indices().exists(new IndicesExistsRequest(INDEX_TWITER)).actionGet().isExists()){
 
             client.admin().indices().delete(new DeleteIndexRequest(INDEX_TWITER)).actionGet();
+        }
+
+        if(!client.admin().indices().exists(new IndicesExistsRequest(INDEX_TWITER)).actionGet().isExists()) {
 
             client.admin().indices().prepareCreate(INDEX_TWITER)
                     .addMapping(MAPPING_TWEET, "{\n" +
