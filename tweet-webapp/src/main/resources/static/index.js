@@ -69,7 +69,7 @@ function placeMarkers() {
                      });
                      markers.push(marker);
 
-                     setTimeout(function() {twttr.widgets.createTweet(tweet.id, document.getElementById('tweets-container'));}, timeout);
+                     setTimeout(function() {twttr.widgets.createTweet(tweet.id, document.getElementById('tweets-container'), {width:350});}, timeout);
 
                      timeout += 200;
 
